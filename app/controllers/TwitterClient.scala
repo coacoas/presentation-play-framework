@@ -2,9 +2,9 @@ package controllers
 
 import play.api.Logger
 import play.api.Play.current
-import play.api.libs.iteratee.{Enumeratee, Iteratee, Enumerator, Concurrent}
-import play.api.libs.{EventSource, json}
-import play.api.libs.json.{JsValue, JsArray, Json}
+import play.api.libs.EventSource
+import play.api.libs.iteratee.{Concurrent, Enumeratee, Iteratee}
+import play.api.libs.json.{JsArray, JsValue, Json}
 import play.api.libs.ws.WS
 import play.api.mvc.{Action, Controller}
 
@@ -15,13 +15,36 @@ import scala.concurrent.Future
  * Created by bcarlson on 8/5/14.
  */
 object TwitterClient extends Controller with TwitterAuth {
-  def index = Action { Ok(views.html.twittersearch.render) }
+
+  def index = Action {
+    Ok(views.html.twittersearch.render)
+  }
 
   def simplifyResponse(tweetResponse: JsValue): JsValue = Json.obj(
     "name" -> tweetResponse \ "user" \ "name",
     "account" -> tweetResponse \ "user" \ "screen_name",
     "tweet" -> tweetResponse \ "text"
   )
+
+  def search(query: String) = Action.async {
+    auth.map { signature =>
+      WS.url(s"https://api.twitter.com/1.1/search/tweets.json").
+        sign(signature).
+        withQueryString(
+          "q" -> query,
+          "count" -> 20.toString,
+          "result_type" -> "mixed",
+          "lang" -> "en").
+        get.map { response =>
+          val tweets =
+            (Json.parse(response.body) \ "statuses").as[JsArray].value.map(simplifyResponse)
+          Ok(Json.prettyPrint(Json.toJson(tweets)))
+        }
+    }.getOrElse {
+      Future.successful(InternalServerError("Please configure twitter authentication using the twitter.conf file"))
+    }
+  }
+
 
   def filter(query: String) = Action {
     auth.map { signature =>
@@ -31,8 +54,8 @@ object TwitterClient extends Controller with TwitterAuth {
         val chunkString = new String(chunk, "UTF-8")
 
         if (chunkString contains "No filter parameters found") {
-          channel.push(Json.obj("error" -> chunkString))
           Logger.info(chunkString)
+          channel.push(Json.obj("error" -> chunkString))
           channel.end(new IllegalArgumentException(chunkString))
         } else {
           chunkCache += chunkString
@@ -49,9 +72,10 @@ object TwitterClient extends Controller with TwitterAuth {
         postAndRetrieveStream("")(_ => tweetIteratee)
 
       Ok.feed(stream &>
+        Concurrent.buffer(100) &>
         Enumeratee.take(100) &>
-        Enumeratee.map[JsValue](simplifyResponse)
-        &> EventSource()).as("text/event-stream")
+        Enumeratee.map[JsValue](simplifyResponse) &>
+        EventSource()).as("text/event-stream")
     }.getOrElse {
       InternalServerError("Please configure twitter authentication.")
     }
