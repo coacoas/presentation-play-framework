@@ -6,11 +6,12 @@
     <title>Twitter Search</title>
 </head>
 <body ng-app="TwitterSearch">
-<div ng-controller="TwitterController">
+<div ng-controller="TwitterController" class="container">
     <form class="form-horizontal">
         Search: <input ng-model="query" type="text"/>
         <button class="btn btn-default" ng-click="search(query)">Search</button>
     </form>
+    <b>{{ tweets.length }}</b> tweets found.
     <div ng-repeat="tweet in tweets">
         <i>{{tweet.tweet}}</i> <b>- {{tweet.name}}</b>
     </div>
