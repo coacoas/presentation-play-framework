@@ -1,12 +1,15 @@
 package controllers
 
-import play.api.Logger
+import java.net.URLDecoder
+
+import play.api.{Routes, Logger}
 import play.api.Play.current
 import play.api.libs.EventSource
 import play.api.libs.iteratee.{Concurrent, Enumeratee, Iteratee}
 import play.api.libs.json.{JsArray, JsValue, Json}
 import play.api.libs.ws.WS
 import play.api.mvc.{Action, Controller}
+import play.core.Router
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -45,7 +48,6 @@ object TwitterClient extends Controller with TwitterAuth {
     }
   }
 
-
   def filter(query: String) = Action {
     auth.map { signature =>
       val (stream, channel) = Concurrent.broadcast[JsValue]
@@ -53,7 +55,7 @@ object TwitterClient extends Controller with TwitterAuth {
       def tweetIteratee = Iteratee.foreach[Array[Byte]] { chunk =>
         val chunkString = new String(chunk, "UTF-8")
 
-        if (chunkString contains "No filter parameters found") {
+        if (chunkCache.isEmpty && !chunkString.startsWith("{")) {
           Logger.info(chunkString)
           channel.push(Json.obj("error" -> chunkString))
           channel.end(new IllegalArgumentException(chunkString))
@@ -68,8 +70,10 @@ object TwitterClient extends Controller with TwitterAuth {
 
       WS.url(s"https://stream.twitter.com/1.1/statuses/filter.json").
         sign(signature).
-        withQueryString("track" -> query).
+        withQueryString("track" -> URLDecoder.decode(query, "UTF-8")).
         postAndRetrieveStream("")(_ => tweetIteratee)
+
+      Logger.info(s"Streaming data for $query")
 
       Ok.feed(stream &>
         Concurrent.buffer(100) &>
@@ -79,5 +83,14 @@ object TwitterClient extends Controller with TwitterAuth {
     }.getOrElse {
       InternalServerError("Please configure twitter authentication.")
     }
+  }
+
+  def jsRoutes = Action { implicit request =>
+    Ok(
+      Routes.javascriptRouter("jsRoutes")(
+        routes.javascript.TwitterClient.filter,
+        routes.javascript.TwitterClient.search
+      )
+    ).as("text/javascript")
   }
 }
