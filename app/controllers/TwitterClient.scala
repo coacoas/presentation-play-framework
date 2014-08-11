@@ -5,10 +5,10 @@ import java.net.URLDecoder
 import play.api.{Routes, Logger}
 import play.api.Play.current
 import play.api.libs.EventSource
-import play.api.libs.iteratee.{Concurrent, Enumeratee, Iteratee}
-import play.api.libs.json.{JsArray, JsValue, Json}
+import play.api.libs.iteratee.{Enumerator, Concurrent, Enumeratee, Iteratee}
+import play.api.libs.json.{JsObject, JsArray, JsValue, Json}
 import play.api.libs.ws.WS
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.{WebSocket, Action, Controller}
 import play.core.Router
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -48,7 +48,7 @@ object TwitterClient extends Controller with TwitterAuth {
     }
   }
 
-  def filter(query: String) = Action {
+  def filter(query: String) = WebSocket.using[JsValue] { request =>
     auth.map { signature =>
       val (stream, channel) = Concurrent.broadcast[JsValue]
       var chunkCache = ""
@@ -75,22 +75,18 @@ object TwitterClient extends Controller with TwitterAuth {
 
       Logger.info(s"Streaming data for $query")
 
-      Ok.feed(stream &>
+      val in = Iteratee.ignore[JsValue]
+
+      val out = stream &>
         Concurrent.buffer(100) &>
         Enumeratee.take(100) &>
-        Enumeratee.map[JsValue](simplifyResponse) &>
-        EventSource()).as("text/event-stream")
-    }.getOrElse {
-      InternalServerError("Please configure twitter authentication.")
-    }
-  }
+        Enumeratee.map[JsValue](simplifyResponse)
 
-  def jsRoutes = Action { implicit request =>
-    Ok(
-      Routes.javascriptRouter("jsRoutes")(
-        routes.javascript.TwitterClient.filter,
-        routes.javascript.TwitterClient.search
-      )
-    ).as("text/javascript")
+      (in, out)
+    } getOrElse {
+      val response: JsValue = Json.obj("error" ->
+        "Please configure twitter authentication using the twitter.conf file")
+      (Iteratee.ignore[JsValue], Enumerator(response) >>> Enumerator.eof)
+    }
   }
 }
