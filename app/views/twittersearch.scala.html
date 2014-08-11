@@ -1,25 +1,19 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="@routes.Assets.at("lib/bootstrap/css/bootstrap.css")" />
-    <title>Twitter Search</title>
-</head>
-<body ng-app="TwitterSearch">
-<div ng-controller="TwitterController" class="container">
-    <form class="form-horizontal">
-        Search: <input ng-model="query" type="text"/>
-        <button class="btn btn-primary" ng-click="search(query)">Search</button>
-        <button class="btn btn-{{active ? 'success' : 'default'}}" ng-click="listen()">Follow</button>
-    </form>
-    <b>{{ tweets.length }}</b> tweets found.
-    <blockquote ng-repeat="tweet in tweets | limitTo: -10">
-        <p>{{tweet.tweet}}</p>
-        <footer>{{tweet.name}}</footer>
-    </blockquote>
-</div>
+@main("Twitter Search") {
+<div ng-app="TwitterSearch">
+    <div ng-controller="TwitterController" class="container">
+        <form class="form-horizontal">
+            Search: <input ng-model="query" type="text"/>
+            <button class="btn btn-primary" ng-click="search(query)">Search</button>
+            <button class="btn btn-{{active ? 'success' : 'default'}}" ng-click="listen()">Follow</button>
+        </form>
+        <b>{{ tweets.length }}</b> tweets found.
+        <blockquote ng-repeat="tweet in tweets | limitTo: -10">
+            <p>{{tweet.tweet}}</p>
+            <footer>{{tweet.name}}</footer>
+        </blockquote>
+    </div>
 <script src="@routes.Assets.at("lib/angularjs/angular.js")"></script>
 <script src="@routes.Assets.at("js/twitter.js")"></script>
 <script src="@routes.TwitterClient.jsRoutes"></script>
-</body>
-</html>
+</div>
+}

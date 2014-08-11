@@ -18,7 +18,7 @@ app.controller 'TwitterController', ['$scope', '$http', ($scope, $http) ->
   $scope.listen = () ->
     if ($scope.active)
       console.log("Closing feed")
-      $scope.tweetFeed?.close
+      $scope.tweetFeed?.close()
       $scope.active = false
     else
       if ($scope.query)
@@ -26,7 +26,7 @@ app.controller 'TwitterController', ['$scope', '$http', ($scope, $http) ->
         $scope.tweetFeed = new EventSource('/stream/' + encodeURI($scope.query))
         $scope.tweetFeed.onmessage = $scope.addMsg
         $scope.tweetFeed.onerror = () ->
-          $scope.tweetFeed?.close
+          $scope.tweetFeed?.close()
           $scope.active = true
         $scope.active = true
       else
