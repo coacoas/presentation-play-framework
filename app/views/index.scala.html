@@ -1,7 +1,37 @@
-@(message: String)
+@(form: Form[User], results: java.util.List[models.User])
 
-@main("Welcome to Play") {
+@main("Users") {
 
-    @play20.welcome(message, style = "Java")
+    <div class="container">
+        <h2>Users:</h2>
+        @helper.form(action = routes.Application.addUser()) {
+            @helper.inputText(form("firstName"), '_label -> "First Name")
+            @helper.inputText(form("lastName"), '_label -> "Last Name")
+            @helper.inputText(form("phone"), '_label -> "Phone Number")
+            @helper.inputText(form("email"), '_label -> "Email Address")
+            <button class="btn btn-default" type="submit">Add User</button>
+        }
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Phone Number</th>
+                    <th>Email Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for(row <- results) {
+                <tr>
+                    <td>@row.getFirstName</td>
+                    <td>@row.getLastName</td>
+                    <td>@row.getPhone</td>
+                    <td>@row.getEmail</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+
+    </div>
 
 }
