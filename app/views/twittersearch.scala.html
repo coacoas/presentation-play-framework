@@ -1,13 +1,6 @@
 @(query: String, tweets: Seq[String])
 
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="@routes.Assets.at("lib/bootstrap/css/bootstrap.css")" />
-    <title>Tweets matching @query</title>
-</head>
-<body>
+@main("Twitter Search") {
     <h1>Tweets matching query <b>@query</b></h1>
     <p>Count: @tweets.size</p>
     <ul>
@@ -15,5 +8,4 @@
           <li>@tweet</li>
         }
     </ul>
-</body>
-</html>
+}

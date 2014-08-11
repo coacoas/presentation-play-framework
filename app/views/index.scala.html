@@ -1,7 +1,8 @@
 @(message: String)
 
-@main("Welcome to Play") {
-
-    @message
-
+@main("Search Twitter") {
+<form action="/search">
+    <input type="text" name="q"/>
+    <button type="submit" class="btn btn-default">Search</button>
+</form>
 }

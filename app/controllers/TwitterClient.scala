@@ -12,7 +12,7 @@ import scala.concurrent.Future
  * Created by bcarlson on 8/5/14.
  */
 object TwitterClient extends Controller with TwitterAuth {
-  def index(query: String) = Action.async {
+  def search(query: String) = Action.async {
     auth.map { signature =>
       WS.url(s"https://api.twitter.com/1.1/search/tweets.json").
         sign(signature).
