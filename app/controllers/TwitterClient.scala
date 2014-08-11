@@ -77,7 +77,6 @@ object TwitterClient extends Controller with TwitterAuth {
 
       Ok.feed(stream &>
         Concurrent.buffer(100) &>
-        Enumeratee.take(100) &>
         Enumeratee.map[JsValue](simplifyResponse) &>
         EventSource()).as("text/event-stream")
     }.getOrElse {

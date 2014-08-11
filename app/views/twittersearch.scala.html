@@ -13,9 +13,10 @@
         <button class="btn btn-{{active ? 'success' : 'default'}}" ng-click="listen()">Follow</button>
     </form>
     <b>{{ tweets.length }}</b> tweets found.
-    <div ng-repeat="tweet in tweets | limitTo: -20">
-        <i>{{tweet.tweet}}</i> <b>- {{tweet.name}}</b>
-    </div>
+    <blockquote ng-repeat="tweet in tweets | limitTo: -10">
+        <p>{{tweet.tweet}}</p>
+        <footer>{{tweet.name}}</footer>
+    </blockquote>
 </div>
 <script src="@routes.Assets.at("lib/angularjs/angular.js")"></script>
 <script src="@routes.Assets.at("js/twitter.js")"></script>
