@@ -1,7 +1,6 @@
 package controllers;
 
 import models.User;
-import play.data.DynamicForm;
 import play.data.Form;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -16,13 +15,8 @@ public class Application extends Controller {
     }
 
     public static Result addUser() {
-        DynamicForm userData = Form.form().bindFromRequest();
-        User user = new User();
-        user.setFirstName(userData.get("firstName"));
-        user.setLastName(userData.get("lastName"));
-        user.setEmail(userData.get("email"));
-        user.setPhone(userData.get("phone"));
-
+        Form<User> userData = Form.form(User.class).bindFromRequest();
+        User user = userData.get();
         user.save();
 
         return redirect("/");
