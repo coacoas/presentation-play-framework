@@ -1,9 +1,9 @@
 package controllers;
 
-import play.*;
-import play.mvc.*;
-
-import views.html.*;
+import play.mvc.Controller;
+import play.mvc.Result;
+import views.html.hello;
+import views.html.index;
 
 public class Application extends Controller {
 
@@ -11,4 +11,7 @@ public class Application extends Controller {
         return ok(index.render("Your new application is ready."));
     }
 
+    public static Result hello(String name, int age) {
+        return ok(hello.render(name, age));
+    }
 }
