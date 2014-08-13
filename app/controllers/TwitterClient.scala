@@ -22,12 +22,6 @@ object TwitterClient extends Controller with TwitterAuth {
     Ok(views.html.twittersearch.render)
   }
 
-  def simplifyResponse(tweetResponse: JsValue): JsValue = Json.obj(
-    "name" -> tweetResponse \ "user" \ "name",
-    "account" -> tweetResponse \ "user" \ "screen_name",
-    "tweet" -> tweetResponse \ "text"
-  )
-
   def search(query: String) = Action.async {
     auth.map { signature =>
       WS.url(s"https://api.twitter.com/1.1/search/tweets.json").
@@ -46,6 +40,12 @@ object TwitterClient extends Controller with TwitterAuth {
       Future.successful(InternalServerError("Please configure twitter authentication using the twitter.conf file"))
     }
   }
+
+  def simplifyResponse(tweetResponse: JsValue): JsValue = Json.obj(
+    "name" -> tweetResponse \ "user" \ "name",
+    "account" -> tweetResponse \ "user" \ "screen_name",
+    "tweet" -> tweetResponse \ "text"
+  )
 
   def filter(query: String) = Action {
     auth.map { signature =>
