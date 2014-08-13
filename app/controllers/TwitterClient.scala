@@ -1,7 +1,7 @@
 package controllers
 
 import play.api.Play.current
-import play.api.libs.json.{JsArray, Json}
+import play.api.libs.json.{JsArray, JsValue, Json}
 import play.api.libs.ws.WS
 import play.api.mvc.{Action, Controller}
 
@@ -24,13 +24,22 @@ object TwitterClient extends Controller with TwitterAuth {
         get.map { response =>
         val json = Json.parse(response.body)
         val tweets = (json \ "statuses").as[JsArray].value.
-          map(status => (status \ "user" \ "name", status \ "text"))
+          map(simplifyResponse)
 
         Ok(views.html.twittersearch.render(query,
-          tweets.map { case (user, tweet) => user.as[String] + ": " + tweet.as[String]}))
+          tweets.map(tweet =>
+            s"${tweet \ "tweet"} - ${tweet \ "name"}")))
       }
     }.getOrElse {
       Future.successful(InternalServerError("Please configure twitter authentication using the twitter.conf file"))
     }
   }
+
+  def simplifyResponse(tweetResponse: JsValue): JsValue = Json.obj(
+    "name" -> tweetResponse \ "user" \ "name",
+    "account" -> tweetResponse \ "user" \ "screen_name",
+    "tweet" -> tweetResponse \ "text"
+  )
+
+
 }
