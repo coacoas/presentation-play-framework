@@ -2,14 +2,13 @@ package controllers
 
 import java.net.URLDecoder
 
-import play.api.{Routes, Logger}
 import play.api.Play.current
 import play.api.libs.EventSource
 import play.api.libs.iteratee.{Concurrent, Enumeratee, Iteratee}
 import play.api.libs.json.{JsArray, JsValue, Json}
 import play.api.libs.ws.WS
 import play.api.mvc.{Action, Controller}
-import play.core.Router
+import play.api.{Logger, Routes}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -39,10 +38,10 @@ object TwitterClient extends Controller with TwitterAuth {
           "result_type" -> "mixed",
           "lang" -> "en").
         get.map { response =>
-          val tweets =
-            (Json.parse(response.body) \ "statuses").as[JsArray].value.map(simplifyResponse)
-          Ok(Json.prettyPrint(Json.toJson(tweets)))
-        }
+        val tweets =
+          (Json.parse(response.body) \ "statuses").as[JsArray].value.map(simplifyResponse)
+        Ok(Json.prettyPrint(Json.toJson(tweets)))
+      }
     }.getOrElse {
       Future.successful(InternalServerError("Please configure twitter authentication using the twitter.conf file"))
     }
@@ -82,14 +81,5 @@ object TwitterClient extends Controller with TwitterAuth {
     }.getOrElse {
       InternalServerError("Please configure twitter authentication.")
     }
-  }
-
-  def jsRoutes = Action { implicit request =>
-    Ok(
-      Routes.javascriptRouter("jsRoutes")(
-        routes.javascript.TwitterClient.filter,
-        routes.javascript.TwitterClient.search
-      )
-    ).as("text/javascript")
   }
 }

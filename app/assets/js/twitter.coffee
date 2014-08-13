@@ -6,8 +6,8 @@ app.controller 'TwitterController', ['$scope', '$http', ($scope, $http) ->
 
   $scope.search = (query) ->
     $http.get '/search', params: { query: query }
-      .then (result) ->
-        $scope.tweets = result.data
+    .then (result) ->
+      $scope.tweets = result.data
 
   $scope.addMsg = (msg) ->
     console.log "Received: " + msg.data
